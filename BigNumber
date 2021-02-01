@@ -1,0 +1,357 @@
+/**
+ * @author Yasmina Daibes
+ */
+ 
+public class BigNumber {
+    
+    private IntNode _head;
+    
+	/** 
+  * empty constructor 
+  */
+  public BigNumber(){
+        _head=new IntNode(0,null);
+ }
+    
+    /**
+     * converting constructor: it converts long number to linked-list.
+     * it creats a list that contains digits of long number from the rightest digit to the leftist.
+     * Ex: The number 234 is filled : 4->3->2 .
+     */
+    public BigNumber(long num){
+        int digit = (int) (num%10);
+        _head = new IntNode(digit , null);
+        IntNode p=_head;
+        num /= 10;
+        while(num!=0){
+            digit = (int)(num %10);
+            p.setNext(new IntNode(digit , null));
+            p=p.getNext();
+            num /= 10;
+        }
+    }
+    
+    /**
+     * copy constructor for linked-list.
+     */
+    public BigNumber(BigNumber other) { 
+        IntNode currOther = other._head;
+        IntNode curr = _head;
+        IntNode prev = curr;
+        while (currOther != null) {
+            IntNode newNode = new IntNode(currOther.getValue(),null);
+            if (_head == null) {
+                _head = newNode;
+                prev = newNode;
+            } else {
+                curr = newNode;
+                prev.setNext(curr);
+                prev = curr;
+            }
+            currOther = currOther.getNext();
+        }
+    }
+    
+    /**
+     * The toString() method returns the string representation of the BigNumber entity.
+     * Time complexity is: O(n), one Iteration over list nodes.
+     * Space complexity is: O(n), toString private called recrusive n times
+     * n is number of digits(IntNode) of the bigNumber.
+     */
+    public String toString(){
+        return toString(_head,""); //overloading to use recursion.
+    }
+    private String toString(IntNode p,String str){
+      if(p!=null){
+            str=toString(p.getNext(),str)+p.getValue();
+        }
+      if(p==null)
+            return "";
+      return (str);
+    }
+    
+    /**
+     *  The compareTo() method compares two BigNumber objects current and given object parameter.
+     *  @param other is bigNumber object and compare it with current BigNumber object.
+     *  Time complexity: O(n) ,Iterate over list of Intnodes in compareTo private function 
+     *                   and in lengthListfunction.
+     *  Space complexity:O(n),compareTo private called recrusive n times 
+     *  n is number of digits(IntNode) of the bigNumber that has the most digits.
+     */
+    public int compareTo (BigNumber other){
+        IntNode p1=this._head;
+        IntNode p2=other._head;
+        int cntThis=lengthList(p1),cntOther=lengthList(p2);// I used a private function lengthList
+        // to fing out how many digit each number has.
+        if(cntThis>cntOther){
+            return 1;
+        }
+        if(cntThis<cntOther){
+            return -1;
+        }
+        if(cntThis==cntOther){
+            return compareTo(p1,p2);// overloading compareTo.
+        }
+        return 0;
+    }
+    private int compareTo(IntNode p,IntNode q){
+        
+        if(p==null)
+            return 0;
+        int value = compareTo(p.getNext(),q.getNext());
+        
+        if(value != 0)
+            return value;
+            
+        if(p.getValue()>q.getValue())
+            return 1;
+        if(p.getValue() < q.getValue())
+            return -1;
+            
+        return 0;
+    }
+    private int lengthList(IntNode p){
+        if(p==null)
+            return 0;
+        int count=0;
+        while(p!=null){
+            count++;
+            p=p.getNext();
+        }
+        return count;
+    }
+    
+    
+       /**
+       * addBigNumber method returns BigNumber object which is representing the sum of two bigNumber-s.
+       * @param other: is a BigNumber that we want to adds it to another BigNumber that called this function.
+       * Time complexity: O(n), one iteration on the Nodes of each BigNumber, one iteration in lengthList
+       * private function. one iteration on BigNumberAdded nodes that has n+1 nodes.
+       * Space complexity:O(n), 
+       * n is the number of digits of the bigger number between other and current BigNumber.
+       * we added space to a new BigNumber that has a n+1 nodes. but it does not change
+       * Space/Time complexity because O(n+1)=O(n).
+       */
+       public BigNumber addBigNumber (BigNumber other){
+        BigNumber BigNumberAdded=new BigNumber();
+        int cntThis=lengthList(_head),cntOther=lengthList(other._head);
+        int length = (cntThis > cntOther) ? cntThis : cntOther;
+        for(int i=1 ; i < length+1 ; ++i)//filing BigNumberAdded with zeros
+            BigNumberAdded._head = new IntNode(0, BigNumberAdded._head);
+        IntNode pThis=_head;
+        IntNode pOther=other._head;
+        IntNode pAdded=BigNumberAdded._head;
+        int carry=0;
+        if(cntThis > cntOther){ // it means that lung number "THIS" have more digits that "OTHER".
+            while(pOther!=null){
+                pAdded.setValue((pThis.getValue()+pOther.getValue()+carry)%10);
+                carry=(pThis.getValue()+pOther.getValue()+carry)/10;
+                pAdded=pAdded.getNext();
+                pOther=pOther.getNext();
+                pThis=pThis.getNext();
+            }
+            while(pThis!=null){
+                pAdded.setValue((pThis.getValue()+carry)%10);
+                carry=(pThis.getValue()+carry)/10;
+                pAdded=pAdded.getNext();
+                pThis=pThis.getNext();
+            }
+        }
+        
+        if(cntThis <= cntOther){
+            
+            while(pThis!=null){                
+                pAdded.setValue((pOther.getValue()+pThis.getValue()+carry)%10);
+                carry=(pOther.getValue()+pThis.getValue()+carry)/10;
+                pAdded=pAdded.getNext();
+                pOther=pOther.getNext();
+                pThis=pThis.getNext();
+            }
+            while(pOther!=null){
+                pAdded.setValue((pOther.getValue()+carry)%10);
+                carry=(pOther.getValue()+carry)/10;
+                pAdded=pAdded.getNext();
+                pOther=pOther.getNext();
+            }
+            if(carry==1)// in case we have same digits in OTHER and THIS, wh might have a carry left
+              pAdded.setValue(carry);
+        }
+        // we should remove the extra 0 in case we have it in the end of the sum.
+        // because I saved the number from left to right in case I have 003 I don't want 
+        // the function the returns the zeros from the left.
+        int countZeros=0;
+        pAdded=BigNumberAdded._head;
+        for(int i=0; i<length-1;i++ )
+            pAdded=pAdded.getNext();
+        if(pAdded.getNext().getValue()==0)
+            pAdded.setNext(null);
+        return BigNumberAdded;
+      }
+    
+    /**
+     * this function sums long number to current BigNumber and returns the sum as bigNumber.
+     * @param num is a long number.
+     * Time complexity: O(n), one iteration on the Nodes of each BigNumber,one iteration 
+       on long nodes after we convert it to BigNumber. num is the "other" bigNumber we call in 
+       addBigNumber function.
+        Space complexity:O(n), 
+        n is the number of digits of the biggest number between long number and current BigNumber.
+        we added space to a new BigNumber that has a n+1 nodes in addBigNumber function
+        but it does not change Space/Time complexity because O(n+1)=O(n).
+     */
+    public BigNumber addLong (long num){
+        BigNumber numList= new BigNumber(num);// converting long num to BigNumber so I can
+        // use the method of adding BigNumber-s.
+        return this.addBigNumber(numList);
+    }
+   
+    /**
+     * this function returns subtracting between two BigNumber-s.
+     * @param other is a bigNumber that we want to subtract from current bigNumber.
+     * Time complexity: O(n), one iteration on lengthList private function (for both bigNumber-s),
+                        one iteration on subBigNumber that we filled with zeros,
+                        one iteration when we subtract the two bigNumbers.
+     * Space complexity:O(n), space for subBigNumber nodes.
+     * n is the number of digits of the larger number between bigNumber-s.
+     * subBigNumber has n nodes.
+     */
+    public BigNumber subtractBigNumber (BigNumber other){
+        int cntThis=lengthList(_head),cntOther=lengthList(other._head);
+        IntNode pThis=_head, pOther=other._head;
+        BigNumber subBigNumber= new BigNumber();
+        IntNode pSub=subBigNumber._head;
+        int length = (cntThis > cntOther) ? cntThis : cntOther;
+        if(this.compareTo(other)==0)// in case we want to subtract same BigNumber-s. we return 0.
+            return subBigNumber;
+            
+        for(int i=0 ; i < length ; ++i) // filing subBigNumber with zeros.
+            subBigNumber._head = new IntNode(0, subBigNumber._head);
+        int carry=0;
+        pSub=subBigNumber._head;pThis=_head; pOther=other._head;
+        if(this.compareTo(other)==1){// this long number is "bigger" than other long number
+            while(pOther!=null){
+                if((pThis.getValue()-pOther.getValue()-carry)<0){ 
+                   pSub.setValue(pThis.getValue() + 10 -pOther.getValue()-carry);
+                   carry= 1;
+                }else {
+                if((pThis.getValue()-pOther.getValue()-carry)>=0){
+                    pSub.setValue(pThis.getValue() -pOther.getValue()-carry);
+                    carry=0;
+                }
+               }
+                pSub=pSub.getNext();
+                pOther=pOther.getNext();
+                pThis=pThis.getNext();
+            }
+            while(pThis!=null){
+                if(pThis.getValue()-carry<0){
+                    pSub.setValue(pThis.getValue()+10-carry);
+                    carry=1;
+                } else {
+                    pSub.setValue(pThis.getValue()-carry);
+                    carry =0;
+                }
+                pSub=pSub.getNext();
+                pThis=pThis.getNext();
+            }
+        }
+        
+        if(this.compareTo(other)==-1){// this long number is "smaller" than other long number
+            while(pThis!=null){
+                if((pOther.getValue()-pThis.getValue()-carry)<0){ 
+                   pSub.setValue(pOther.getValue() + 10 -pThis.getValue()-carry);
+                   carry= 1;
+                }
+                if((pOther.getValue()-pThis.getValue()-carry)>=0){
+                    pSub.setValue(pOther.getValue() -pThis.getValue()-carry);
+                    carry=0;
+                }
+                pSub=pSub.getNext();
+                pOther=pOther.getNext();
+                pThis=pThis.getNext();
+            }
+            while(pOther!=null){
+                if(pOther.getValue()-carry<0){
+                    pSub.setValue(pOther.getValue()+10-carry);
+                    carry=1;
+                } else {
+                    pSub.setValue(pOther.getValue()-carry);
+                    carry =0;
+                }
+                pSub=pSub.getNext();
+                pOther=pOther.getNext();
+            }
+        }
+         // in case we have zeros in the left of the long number (like 0003)in my solution my list
+        // will be (3->0->0->0) and I don't want to save the last zeros.
+        pSub=subBigNumber._head;
+        int cntZeros=0;
+        while(pSub!=null){ // finding how many zeros sequence in the end of list.
+            cntZeros=0;
+            if(pSub != null && pSub.getValue()==0){
+                while(pSub!=null && pSub.getValue()==0){
+                   cntZeros++;
+                   pSub=pSub.getNext();
+                }
+            }
+            if(pSub != null)
+                pSub=pSub.getNext();
+        }
+        pSub=subBigNumber._head;
+        if(cntZeros>0){ // findin the last pointer that point to a non-zero value 
+            for(int i=0;i<length-cntZeros;i++)
+                pSub=pSub.getNext();
+            pSub.setNext(null); 
+        }
+        return subBigNumber;
+    }
+    
+    /**
+     * this function multiplicate two BigNumber-s.
+     * @param other bigNumber that we should multiplucate it with current bigNumber.
+     * Time complexity: O(n*m), one iteration on lengthList private function (for both bigNumber-s),
+                        n*m iterations when we fill "mult bigNumber" the digits we get from 
+                        multiplicate the two bigNumbers.
+     * Space complexity:O(n+m), space for mult nodes, if we multiplicate two numbers that has m 
+     *                          digits and the seconed n digits we will have maximum m+n digits
+     *                          of the result of the multiplicate between them.
+     * n is the number of digits of the larger number between bigNumber-s.
+     * m is the number of digits of the smaller number.
+     */
+    public BigNumber multBigNumber (BigNumber other){ 
+        BigNumber mult= new BigNumber();
+        IntNode pMult=mult._head;
+        IntNode pOther=other._head;
+        IntNode pThis=this._head;
+        int lThis=lengthList(pThis),lOther=lengthList(pOther);
+        int count=0;
+        // I used the way of multiplication: 234*12= 234*2 + 234*10
+        if(lOther>lThis)
+           while(pThis!=null){
+              mult=mult.addBigNumber(addingZeros(multNumWithBig(other,pThis.getValue()),count));
+              pThis=pThis.getNext();
+              count++;
+           } 
+        if(lOther<=lThis)
+         while(pOther!=null){ 
+           mult=mult.addBigNumber(addingZeros(multNumWithBig(this,pOther.getValue()),count));
+           pOther=pOther.getNext();
+           count++;
+         }
+        return mult;
+    } 
+    private BigNumber multNumWithBig(BigNumber big,int num){ 
+        BigNumber bigBig=new BigNumber();
+        for(int i=0;i<num;i++) // num can be 0 to 9.
+            bigBig=bigBig.addBigNumber(big);// 3*4 = 3+3+3+3 :)
+        return bigBig;
+    }
+    private BigNumber addingZeros(BigNumber big,int count){
+        IntNode pBig=big._head;
+        for(int i=0;i<count;i++){ // Adding zeros depends on the location of current digit. 
+            IntNode newNode=new IntNode(0,big._head);
+            big._head=newNode;
+        }
+        return big;
+    }
+}
